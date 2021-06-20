@@ -4,6 +4,8 @@ import sys
 
 def send_worm(PORT):
     IP = socket.gethostbyname(socket.gethostname()+".local")
+    #print(IP)
+    # IP failed binding during demo, be careful next time
     ADDR = (IP, PORT)
     SIZE = 1024
     FORMAT = "utf-8"
